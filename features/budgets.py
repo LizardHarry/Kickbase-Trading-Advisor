@@ -63,21 +63,33 @@ def calc_manager_budgets(token, league_id, league_start_date, start_budget):
         perf_df["Team Value"] = []
 
     # Initial budgets from activities
-    budgets = {user: start_budget for user in set(activities_df["byr"].dropna().unique())
-                                          .union(set(activities_df["slr"].dropna().unique()))}
+    # Initial budgets from activities
+    # Sicherstellen, dass die Spalten im DataFrame existieren, um KeyErrors zu vermeiden
+    if "byr" not in activities_df.columns:
+        activities_df["byr"] = None
+    if "slr" not in activities_df.columns:
+        activities_df["slr"] = None
+    if "trp" not in activities_df.columns:
+        activities_df["trp"] = 0
+
+    unique_users = set(activities_df["byr"].dropna().unique()).union(set(activities_df["slr"].dropna().unique()))
+    budgets = {user: start_budget for user in unique_users}
 
     for _, row in activities_df.iterrows():
         byr, slr, trp = row.get("byr"), row.get("slr"), row.get("trp", 0)
         try:
-            if pd.isna(byr) and pd.notna(slr):
+            if pd.isna(byr) and pd.notna(slr) and slr in budgets:
                 budgets[slr] += trp
-            elif pd.isna(slr) and pd.notna(byr):
+            elif pd.isna(slr) and pd.notna(byr) and byr in budgets:
                 budgets[byr] -= trp
             elif pd.notna(byr) and pd.notna(slr):
-                budgets[byr] -= trp
-                budgets[slr] += trp
+                if byr in budgets:
+                    budgets[byr] -= trp
+                if slr in budgets:
+                    budgets[slr] += trp
         except KeyError as e:
             print(f"Warning: Skipping invalid activity row {row}: {e}")
+
 
     budget_df = pd.DataFrame(list(budgets.items()), columns=["User", "Budget"])
 
