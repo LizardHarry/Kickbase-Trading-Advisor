@@ -94,6 +94,14 @@ def calc_manager_budgets(token, league_id, league_start_date, start_budget):
     budget_df = pd.DataFrame(list(budgets.items()), columns=["User", "Budget"])
     budget_df["User"] = budget_df["User"].astype(str)
 
+    # Sicherstellen, dass auch das Performance-Dataframe als Text interpretiert wird
+    if "name" in perf_df.columns:
+        perf_df["name"] = perf_df["name"].astype(str)
+    else:
+        perf_df["name"] = pd.Series(dtype=str)
+        perf_df["point_bonus"] = pd.Series(dtype=float)
+        perf_df["Team Value"] = pd.Series(dtype=float)
+
     # Merge performance bonuses
     budget_df = budget_df.merge(
         perf_df[["name", "point_bonus", "Team Value"]],
