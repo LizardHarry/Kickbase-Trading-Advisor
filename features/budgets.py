@@ -92,6 +92,7 @@ def calc_manager_budgets(token, league_id, league_start_date, start_budget):
 
 
     budget_df = pd.DataFrame(list(budgets.items()), columns=["User", "Budget"])
+    budget_df["User"] = budget_df["User"].astype(str)
 
     # Merge performance bonuses
     budget_df = budget_df.merge(
